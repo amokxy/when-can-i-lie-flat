@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Singapore Retirement Calculator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f5f5f3;--bg3:#eeede9;
+  --text:#1a1a18;--text2:#6b6b66;--text3:#9b9b96;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --info-bg:#e6f1fb;--info-text:#0c447c;
+  --warn-bg:#faeeda;--warn-text:#633806;
+  --success-bg:#eaf3de;--success-text:#27500a;
+  --danger-bg:#fcebeb;--danger-text:#791f1f;
+  --radius-md:8px;--radius-lg:12px;
+  --accent:#3B4FC0;--teal:#0F6E56;--amber:rgba(186,117,23,0.9);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--bg2:#252523;--bg3:#2e2e2b;
+  --text:#f0efe9;--text2:#a8a8a2;--text3:#6b6b66;
+  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+  --info-bg:#0c2d4a;--info-text:#85b7eb;
+  --warn-bg:#3a2a0a;--warn-text:#fac775;
+  --success-bg:#1a2e0a;--success-text:#97c459;
+  --danger-bg:#2e0a0a;--danger-text:#f09595;
+  --accent:#6B7FD7;--teal:#3EBEAB;--amber:rgba(239,159,39,0.9);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;min-height:100vh}
+.page{max-width:740px;margin:0 auto;padding:2rem 1.25rem 4rem}
+
+/* header */
+.hdr{margin-bottom:2rem}
+.hdr h1{font-size:20px;font-weight:500;margin-bottom:.2rem}
+.hdr p{font-size:13px;color:var(--text3)}
+
+/* global settings bar */
+.gbar{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:12px 16px;background:var(--bg2);border-radius:var(--radius-md);margin-bottom:2rem}
+.gseg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.gseg input[type=range]{width:90px;accent-color:var(--accent);cursor:pointer}
+.grout{font-size:13px;font-weight:500;color:var(--text);min-width:30px}
+.gdiv{width:1px;height:20px;background:var(--border2)}
+
+/* CPF panel */
+.cpfpanel{background:var(--bg2);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:2rem}
+.cpftop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.cpftitle{font-size:13px;font-weight:500;color:var(--text)}
+.cpftog{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none}
+.pill{width:32px;height:18px;border-radius:9px;background:var(--border2);position:relative;transition:background .2s;flex-shrink:0}
+.pill.on{background:var(--accent)}
+.pill::after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
+.pill.on::after{left:17px}
+.cpfnote{font-size:13px;color:var(--text3)}
+.cpfgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.cpfitem .cl{font-size:11px;color:var(--text3);margin-bottom:3px}
+.cpfitem .cv{font-size:14px;font-weight:500;color:var(--text)}
+.cpfitem .cs{font-size:11px;color:var(--text2)}
+.infopill{display:inline-flex;align-items:center;gap:4px;font-size:11px;background:var(--info-bg);color:var(--info-text);padding:3px 9px;border-radius:var(--radius-md);margin-top:10px}
+
+/* section cards */
+.scard{background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem}
+.scard-hdr{display:flex;align-items:flex-start;gap:12px;margin-bottom:1.25rem}
+.snum{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.scard-hdr .stitle{font-size:15px;font-weight:500;color:var(--text);line-height:1.3}
+.scard-hdr .sdesc{font-size:13px;color:var(--text2);margin-top:2px}
+
+/* connector arrow between sections */
+.connector{display:flex;justify-content:center;margin:-0.5rem 0 1rem;color:var(--text3);font-size:20px}
+
+/* form grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1rem}
+@media(max-width:500px){.g2,.g3{grid-template-columns:1fr}.cpfgrid{grid-template-columns:1fr 1fr}}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:13px;color:var(--text2)}
+.fld input,.fld select{width:100%;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .15s}
+.fld input:focus,.fld select:focus{border-color:var(--accent)}
+.slrow{display:flex;align-items:center;gap:8px;margin-top:4px}
+.slrow input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer}
+.slbl{font-size:12px;color:var(--text3)}
+
+/* metric cards */
+.mets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:1rem 0}
+.mets.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mets.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:500px){.mets,.mets.two,.mets.four{grid-template-columns:1fr 1fr}}
+.met{background:var(--bg2);border-radius:var(--radius-md);padding:13px 15px}
+.met .lb{font-size:12px;color:var(--text2);margin-bottom:4px}
+.met .vl{font-size:19px;font-weight:500;color:var(--text);line-height:1.15}
+.met .sb{font-size:12px;color:var(--text2);margin-top:3px}
+.met.hi{border:1.5px solid var(--accent)}
+.met.hi .vl{color:var(--accent)}
+.met.good{border:1.5px solid var(--teal)}
+.met.good .vl{color:var(--teal)}
+.met.warn{border:1.5px solid var(--warn-text)}
+.met.warn .vl{color:var(--warn-text)}
+
+/* section divider label */
+.slabel{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:1.25rem 0 .6rem}
+
+/* inline note box */
+.notebox{background:var(--bg2);border-radius:var(--radius-md);padding:11px 14px;margin:1rem 0;font-size:12px;color:var(--text2);line-height:1.55}
+.notebox .nt{font-size:12px;font-weight:500;color:var(--info-text);margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.notebox.warn-box{background:var(--warn-bg)}
+.notebox.warn-box .nt{color:var(--warn-text)}
+
+/* gap section specifics */
+.gap-status{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius-md);margin:1rem 0;font-size:14px;font-weight:500}
+.gap-status.ok{background:var(--success-bg);color:var(--success-text)}
+.gap-status.behind{background:var(--danger-bg);color:var(--danger-text)}
+
+/* rate scenario table */
+.rtable{width:100%;border-collapse:collapse;font-size:13px;margin-top:.5rem}
+.rtable th{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:5px 10px 8px;text-align:left;border-bottom:0.5px solid var(--border2)}
+.rtable td{padding:8px 10px;border-bottom:0.5px solid var(--border);color:var(--text2)}
+.rtable tr:last-child td{border-bottom:none}
+.rtable td:first-child{color:var(--text);font-weight:500}
+.rtable td.good{color:var(--teal);font-weight:500}
+.rtable td.warn{color:var(--warn-text);font-weight:500}
+.rtable td.hi{color:var(--accent);font-weight:500}
+.rtable tr.current-row td{background:var(--bg2)}
+
+/* chart */
+.chartbox{position:relative;width:100%;height:230px;margin:1rem 0}
+.leg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--text2);margin-bottom:.5rem}
+.leg span{display:flex;align-items:center;gap:5px}
+.legdot{width:10px;height:10px;border-radius:2px}
+.legtick{width:10px;height:3px;border-radius:1px}
+
+/* share card */
+.sharecard{background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem;margin-top:1.5rem}
+.sharecard .sct{font-size:13px;font-weight:500;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sharetable{width:100%;font-size:13px;border-collapse:collapse}
+.sharetable td{padding:5px 0;color:var(--text2);border-bottom:0.5px solid var(--border)}
+.sharetable td:last-child{text-align:right;font-weight:500;color:var(--text)}
+.sharetable tr:last-child td{border-bottom:none}
+.sharetable .sh{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding-top:10px}
+.sharetable .sh td{border-bottom:0.5px solid var(--border2);color:var(--text3);font-weight:500}
+.copybtn{margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-md);padding:6px 12px;cursor:pointer;font-family:inherit;transition:background .15s}
+.copybtn:hover{background:var(--bg3)}
+.disc{font-size:12px;color:var(--text3);border-top:0.5px solid var(--border);padding-top:1rem;line-height:1.6;margin-top:1.5rem}
+
+.hint-wrap{position:relative;display:inline-flex;align-items:center;margin-left:3px}
+.hint-icon{font-size:13px;color:var(--text3);cursor:help;vertical-align:-1px}
+.hint-icon:hover{color:var(--accent)}
+.hint-tip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:12px;line-height:1.45;padding:6px 10px;border-radius:var(--radius-md);width:220px;text-align:center;pointer-events:none;z-index:99;white-space:normal}
+.hint-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--text)}
+.hint-wrap:hover .hint-tip{display:block}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hdr">
+  <h1>Singapore retirement planner</h1>
+  <p>Target → current state → gap. Fill in the sections top to bottom.</p>
+</div>
+
+<!-- Current age + Global settings -->
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;flex-wrap:wrap">
+  <div class="fld" style="flex-direction:row;align-items:center;gap:10px;margin-bottom:0">
+    <label style="font-size:13px;color:var(--text2);white-space:nowrap;font-weight:500">Your current age</label>
+    <input type="number" id="s2age" value="30" min="16" max="80" oninput="go()" style="width:72px">
+  </div>
+  <div class="fld" style="flex-direction:row;align-items:center;gap:10px;margin-bottom:0">
+    <label style="font-size:13px;color:var(--text2);white-space:nowrap;font-weight:500">Current savings &amp; investments (S$)</label>
+    <input type="text" inputmode="numeric" id="s2sav" value="50,000" style="width:130px">
+  </div>
+</div>
+<div class="gbar">
+  <div class="gseg"><span>Annual return</span><input type="range" id="rrate" min="1" max="15" step="0.5" value="6" oninput="document.getElementById('rro').textContent=this.value+'%';go()"><span class="grout" id="rro">6%</span></div>
+  <div class="gdiv"></div>
+  <div class="gseg"><span>Inflation</span><input type="range" id="inf" min="0" max="6" step="0.5" value="2.5" oninput="document.getElementById('iro').textContent=this.value+'%';go()"><span class="grout" id="iro">2.5%</span></div>
+  <div class="gdiv"></div>
+  <div class="gseg"><span>Withdrawal rate</span><span class="hint-wrap"><i class="ti ti-info-circle hint-icon"></i><span class="hint-tip">The % of your pot you withdraw each year — 4% is the historically safe rate for a 30-year retirement.</span></span><input type="range" id="wdr" min="2" max="7" step="0.5" value="4" oninput="document.getElementById('wro').textContent=this.value+'%';go()"><span class="grout" id="wro">4%</span></div>
+</div>
+
+<!-- CPF panel -->
+<div class="cpfpanel">
+  <div class="cpftop">
+    <span class="cpftitle"><i class="ti ti-building-bank" style="font-size:15px;vertical-align:-2px;margin-right:5px"></i>CPF contributions</span>
+    <label class="cpftog" onclick="toggleCPF()">
+      <span id="cpftogpill" class="pill"></span>
+      <span id="cpftoglabel">Off — leave off if freelance or self-employed</span>
+    </label>
+  </div>
+  <div id="cpfoff"><span class="cpfnote">Toggle on if you receive CPF. Auto-fills OA/SA based on your gross salary and age.</span></div>
+  <div id="cpfon" style="display:none">
+    <div class="g2" style="margin-bottom:10px">
+      <div class="fld"><label>Gross monthly salary (S$)</label><input type="text" inputmode="numeric" id="salary" value="5,000"></div>
+      <div class="fld"><label>Age (auto-synced from above)</label><input type="number" id="cpfage" value="30" min="16" max="65" oninput="calcCPF()"></div>
+    </div>
+    <div class="cpfgrid">
+      <div class="cpfitem"><div class="cl">OA (investable)</div><div class="cv" id="coa">—</div><div class="cs">per month</div></div>
+      <div class="cpfitem"><div class="cl">SA (retirement)</div><div class="cv" id="csa">—</div><div class="cs">per month</div></div>
+      <div class="cpfitem"><div class="cl">Total (ee + er)</div><div class="cv" id="ctot">—</div><div class="cs" id="ctotrate">per month</div></div>
+    </div>
+    <div class="infopill"><i class="ti ti-info-circle" style="font-size:12px"></i><span id="cpfinfonote">OA amount is added to your monthly contributions below.</span></div>
+  </div>
+</div>
+
+<!-- ─── SECTION 1: Ideal state ─── -->
+<div class="scard" id="sec1">
+  <div class="scard-hdr">
+    <div class="snum">1</div>
+    <div>
+      <div class="stitle">What retirement sum do I need?</div>
+      <div class="sdesc">Your target — based on the life you want in retirement.</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="fld"><label>Desired retirement age</label><input type="number" id="s1ret" value="65" min="40" max="85" oninput="go()"></div>
+    <div class="fld"><label>Life expectancy (plan to)</label><input type="number" id="s1life" value="85" min="65" max="105" oninput="go()"></div>
+    <div class="fld"><label>Monthly income wanted (S$, today's money)</label><input type="text" inputmode="numeric" id="s1inc" value="3,000"></div>
+    <div class="fld"><label>Estimated CPF LIFE payout (S$/mo)</label><input type="text" inputmode="numeric" id="s1cpf" value="1,200" placeholder="0 if unsure"></div>
+  </div>
+
+  <div class="mets" id="s1mets">
+    <div class="met hi"><div class="lb">Portfolio target sum</div><div class="vl" id="s1tgt">—</div><div class="sb" id="s1tgts"></div></div>
+    <div class="met"><div class="lb">Monthly shortfall to fund</div><div class="vl" id="s1short">—</div><div class="sb" id="s1shorts"></div></div>
+    <div class="met"><div class="lb">Retirement years to fund</div><div class="vl" id="s1yrs">—</div><div class="sb"></div></div>
+  </div>
+
+  <div class="notebox" id="s1cpfbox">
+    <div class="nt"><i class="ti ti-info-circle" style="font-size:13px"></i>CPF LIFE note</div>
+    <div id="s1cpftext"></div>
+  </div>
+
+  <p class="slabel">Monthly savings required to hit this target</p>
+  <div class="mets two">
+    <div class="met" id="s1savmet"><div class="lb">Starting now, you need to save</div><div class="vl" id="s1savreq">—</div><div class="sb" id="s1savreqs"></div></div>
+    <div class="met"><div class="lb">Of which your personal savings</div><div class="vl" id="s1savnet">—</div><div class="sb" id="s1savnets"></div></div>
+  </div>
+</div>
+
+<div class="connector"><i class="ti ti-arrow-down"></i></div>
+
+<!-- ─── SECTION 2: Current state ─── -->
+<div class="scard" id="sec2">
+  <div class="scard-hdr">
+    <div class="snum">2</div>
+    <div>
+      <div class="stitle">Where am I now?</div>
+      <div class="sdesc">Your current trajectory — what you'll have if nothing changes.</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="fld"><label>Monthly contribution (S$)</label><input type="text" inputmode="numeric" id="s2con" value="1,500"></div>
+  </div>
+
+  <div class="mets two" id="s2mets-main">
+    <div class="met hi"><div class="lb">You hit your target at age</div><div class="vl" id="s2retage">—</div><div class="sb" id="s2retageSub"></div></div>
+    <div class="met"><div class="lb">Pot at your desired retirement age (<span id="s2desiredAge">65</span>)</div><div class="vl" id="s2pot">—</div><div class="sb" id="s2pots"></div></div>
+  </div>
+  <div class="mets two">
+    <div class="met"><div class="lb">Monthly income at desired age</div><div class="vl" id="s2inc">—</div><div class="sb" id="s2incs"></div></div>
+    <div class="met"><div class="lb">Real value (today's money)</div><div class="vl" id="s2real">—</div><div class="sb" id="s2reals"></div></div>
+  </div>
+
+  <p class="slabel">Projected growth</p>
+  <div class="leg" id="s2leg"></div>
+  <div class="chartbox"><canvas id="s2chart" role="img" aria-label="Projected savings growth chart"></canvas></div>
+</div>
+
+<div class="connector"><i class="ti ti-arrow-down"></i></div>
+
+<!-- ─── SECTION 3: The gap ─── -->
+<div class="scard" id="sec3">
+  <div class="scard-hdr">
+    <div class="snum">3</div>
+    <div>
+      <div class="stitle">What needs to change?</div>
+      <div class="sdesc">The gap between where you are and where you need to be — and your levers.</div>
+    </div>
+  </div>
+
+  <div id="s3status" class="gap-status behind" style="display:none"></div>
+
+  <p class="slabel">The savings gap</p>
+  <div class="mets two" id="s3gapmets">
+    <div class="met hi"><div class="lb">Extra monthly savings needed</div><div class="vl" id="s3extra">—</div><div class="sb" id="s3extras"></div></div>
+    <div class="met"><div class="lb">Total monthly savings required</div><div class="vl" id="s3total">—</div><div class="sb" id="s3totals"></div></div>
+  </div>
+
+  <p class="slabel">Lever 1 — save more: retire earlier</p>
+  <div class="notebox"><div id="s3earlytext">—</div></div>
+  <div class="mets" id="s3earlymets">
+    <div class="met"><div class="lb">Retire 5 years earlier at</div><div class="vl" id="s3e5a">—</div><div class="sb" id="s3e5b"></div></div>
+    <div class="met"><div class="lb">Retire 10 years earlier at</div><div class="vl" id="s3e10a">—</div><div class="sb" id="s3e10b"></div></div>
+    <div class="met"><div class="lb">Retire on target at</div><div class="vl" id="s3e0a">—</div><div class="sb" id="s3e0b"></div></div>
+  </div>
+
+  <p class="slabel">Lever 2 — return rate scenarios</p>
+  <table class="rtable" id="s3rtable">
+    <thead><tr><th>Annual return</th><th>Pot at retirement</th><th>Monthly income</th><th>Extra savings needed/mo</th><th>Retire at age</th></tr></thead>
+    <tbody id="s3rtbody"></tbody>
+  </table>
+
+  <p class="slabel">Gap projection chart</p>
+  <div class="leg" id="s3leg"></div>
+  <div class="chartbox"><canvas id="s3chart" role="img" aria-label="Gap projection chart comparing current trajectory vs target"></canvas></div>
+</div>
+
+<!-- Share / copy -->
+<div class="sharecard">
+  <div class="sct"><i class="ti ti-clipboard-text" style="font-size:15px"></i>Full summary</div>
+  <table class="sharetable" id="sharetable"></table>
+  <button class="copybtn" onclick="copySummary()"><i class="ti ti-copy" style="font-size:14px"></i><span id="copylbl">Copy summary</span></button>
+</div>
+
+<p class="disc">Estimates only — not financial advice. CPF rates based on 2024 published schedules; verify at cpf.gov.sg. Returns are not guaranteed. Inflation adjustment assumes 2.5% base from Section 1 retirement age vs age 30 as reference. Consult a licensed financial adviser before making investment decisions.</p>
+</div>
+
+<script>
+let cpfOn=false, ch2=null, ch3=null, lastSummary=[];
+const CPF_RATES=[
+  {maxAge:35,ee:0.20,er:0.17,oaFrac:0.6217,saFrac:0.1621},
+  {maxAge:45,ee:0.20,er:0.17,oaFrac:0.5677,saFrac:0.1891},
+  {maxAge:50,ee:0.20,er:0.17,oaFrac:0.5136,saFrac:0.2162},
+  {maxAge:55,ee:0.20,er:0.17,oaFrac:0.4055,saFrac:0.3108},
+  {maxAge:60,ee:0.135,er:0.13,oaFrac:0.3694,saFrac:0.2776},
+  {maxAge:65,ee:0.075,er:0.09,oaFrac:0.2376,saFrac:0.2312},
+  {maxAge:999,ee:0.05,er:0.075,oaFrac:0.1346,saFrac:0.1346},
+];
+const CPF_CEIL=6800;
+
+function getCPFRate(age){return CPF_RATES.find(r=>age<=r.maxAge)||CPF_RATES[CPF_RATES.length-1];}
+
+function parseInput(el){return parseFloat(((el&&el.value)||'0').replace(/,/g,''))||0;}
+function attachFmt(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.removeAttribute('oninput');
+  el.addEventListener('focus',function(){this.value=this.value.replace(/,/g,'');});
+  el.addEventListener('blur',function(){
+    const n=parseFloat(this.value.replace(/,/g,''));
+    if(!isNaN(n))this.value=Math.round(n).toLocaleString();
+    go();
+  });
+  el.addEventListener('input',function(){go();});
+  const n=parseFloat((el.value||'').replace(/,/g,''));
+  if(!isNaN(n)&&n>0)el.value=Math.round(n).toLocaleString();
+}
+function sgf(n){if(n==null||isNaN(n))return'—';return'S$'+Math.round(n).toLocaleString();}
+
+function calcCPF(){
+  const sal=parseInput(document.getElementById('salary'));
+  const age=parseInt(document.getElementById('cpfage').value)||30;
+  const r=getCPFRate(age);
+  const base=Math.min(sal,CPF_CEIL);
+  const total=base*(r.ee+r.er);
+  const oa=Math.round(total*r.oaFrac);
+  const sa=Math.round(total*r.saFrac);
+  document.getElementById('coa').textContent='S$'+oa.toLocaleString();
+  document.getElementById('csa').textContent='S$'+sa.toLocaleString();
+  document.getElementById('ctot').textContent='S$'+Math.round(total).toLocaleString();
+  document.getElementById('ctotrate').textContent='('+(Math.round((r.ee+r.er)*1000)/10)+'% combined)';
+  document.getElementById('cpfinfonote').textContent='OA (S$'+oa.toLocaleString()+'/mo) added to your contributions below.';
+  go();
+}
+function getCPFBoost(){
+  if(!cpfOn)return 0;
+  const sal=parseInput(document.getElementById('salary'));
+  const age=parseInt(document.getElementById('cpfage').value)||30;
+  const r=getCPFRate(age);
+  return Math.round(Math.min(sal,CPF_CEIL)*(r.ee+r.er)*r.oaFrac);
+}
+function toggleCPF(){
+  cpfOn=!cpfOn;
+  document.getElementById('cpftogpill').classList.toggle('on',cpfOn);
+  document.getElementById('cpftoglabel').textContent=cpfOn?'On — CPF OA added to contributions':'Off — leave off if freelance or self-employed';
+  document.getElementById('cpfoff').style.display=cpfOn?'none':'block';
+  document.getElementById('cpfon').style.display=cpfOn?'block':'none';
+  if(cpfOn)calcCPF(); else go();
+}
+
+function projPot(sav,con,mr,months){
+  if(mr===0)return sav+con*months;
+  return sav*Math.pow(1+mr,months)+con*(Math.pow(1+mr,months)-1)/mr;
+}
+function monthsToHit(sav,con,mr,target){
+  let p=sav;
+  for(let m=0;m<=600;m++){if(p>=target)return m;p=p*(1+mr)+con;}
+  return null;
+}
+function conToHit(sav,mr,months,target){
+  const growth=Math.pow(1+mr,months);
+  if(mr===0)return months>0?(target-sav)/months:Infinity;
+  const denom=(growth-1)/mr;
+  return denom>0?(target-sav*growth)/denom:Infinity;
+}
+
+function go(){
+  const ar=parseFloat(document.getElementById('rrate').value)/100;
+  const infr=parseFloat(document.getElementById('inf').value)/100;
+  const wdr=parseFloat(document.getElementById('wdr').value)/100;
+  const mr=ar/12;
+
+  // Sync CPF age from the global current age field
+  const globalAge=parseInt(document.getElementById('s2age').value)||30;
+  document.getElementById('cpfage').value=globalAge;
+
+  const cpfBoost=getCPFBoost();
+
+  /* ── Section 1 ── */
+  // Read current age + savings early for Section 1 feasibility component
+  const s2agePre=globalAge;
+  const s2savPre=parseInput(document.getElementById('s2sav'));
+
+  const s1ret=parseInt(document.getElementById('s1ret').value)||65;
+  const s1life=parseInt(document.getElementById('s1life').value)||85;
+  const s1incToday=parseInput(document.getElementById('s1inc'))||3000;
+  const s1cpfPayout=parseInput(document.getElementById('s1cpf'));
+  const s1yrsRet=Math.max(0,s1life-s1ret);
+  const refAge=30;
+  const s1incFuture=s1incToday*Math.pow(1+infr,Math.max(0,s1ret-refAge));
+  const s1shortfall=Math.max(0,s1incFuture-s1cpfPayout);
+  const s1tgt=s1shortfall>0?s1shortfall*12/wdr:0;
+  const s1tgtToday=s1tgt/Math.pow(1+infr,Math.max(0,s1ret-refAge));
+
+  document.getElementById('s1tgt').textContent=sgf(s1tgt);
+  document.getElementById('s1tgts').textContent=sgf(s1tgtToday)+" in today's money";
+  document.getElementById('s1short').textContent=sgf(Math.round(s1shortfall))+'/mo';
+  document.getElementById('s1shorts').textContent='CPF covers '+sgf(Math.round(s1cpfPayout))+'/mo';
+  document.getElementById('s1yrs').textContent=s1yrsRet+(s1yrsRet===1?' year':' years');
+  document.getElementById('s1cpftext').textContent=s1cpfPayout>0
+    ?'CPF LIFE payout of '+sgf(Math.round(s1cpfPayout))+'/mo reduces what your portfolio needs to generate. The target sum is for your investment portfolio only, excluding CPF.'
+    :'No CPF LIFE payout entered. Typical payouts (Enhanced Retirement Sum, 2024) range S$1,700–S$2,400/mo. Add an estimate to reduce your portfolio target.';
+
+  // Monthly savings required component
+  const s1yrsToRet=Math.max(0,s1ret-s2agePre);
+  const s1mo=s1yrsToRet*12;
+  const s1growth=mr===0?1:Math.pow(1+mr,s1mo);
+  const s1reqCon=s1mo>0?(mr===0?(s1tgt-s2savPre)/s1mo:Math.max(0,(s1tgt-s2savPre*s1growth)/((s1growth-1)/mr))):0;
+  const s1reqNet=Math.max(0,s1reqCon-cpfBoost);
+  const s1savMetEl=document.getElementById('s1savmet');
+  if(s1yrsToRet<=0){
+    document.getElementById('s1savreq').textContent='—';
+    document.getElementById('s1savreqs').textContent='retirement age already reached';
+    document.getElementById('s1savnet').textContent='—';
+    document.getElementById('s1savnets').textContent='';
+    s1savMetEl.className='met';
+  } else {
+    document.getElementById('s1savreq').textContent=sgf(Math.round(s1reqCon))+'/mo';
+    document.getElementById('s1savreqs').textContent='over '+s1yrsToRet+' years to age '+s1ret;
+    document.getElementById('s1savnet').textContent=sgf(Math.round(s1reqNet))+'/mo';
+    document.getElementById('s1savnets').textContent=cpfBoost?'after CPF OA ('+sgf(cpfBoost)+'/mo)':'no CPF offset';
+    // Colour the card: green if current savings cover it, amber if not
+    const s2conNow=parseInput(document.getElementById('s2con'))+cpfBoost;
+    s1savMetEl.className='met '+(s2conNow>=s1reqCon?'good':'warn');
+  }
+
+  /* ── Section 2 ── */
+  const s2age=globalAge;
+  const s2sav=parseInput(document.getElementById('s2sav'));
+  const s2con=parseInput(document.getElementById('s2con'))+cpfBoost;
+  const s2ret=s1ret; // desired retirement age comes from Section 1
+
+  // When do they actually hit the target at current trajectory?
+  const hitMonths=monthsToHit(s2sav,s2con,mr,s1tgt);
+  const hitAge=hitMonths!=null?Math.round(s2age+hitMonths/12):null;
+
+  // What pot do they have at the desired retirement age?
+  const s2yrs=Math.max(0,s2ret-s2age);
+  const s2pot=projPot(s2sav,s2con,mr,s2yrs*12);
+  const s2rpot=infr>0?s2pot/Math.pow(1+infr,s2yrs):s2pot;
+  const s2minc=s2pot*wdr/12;
+
+  document.getElementById('s2desiredAge').textContent=s2ret;
+
+  if(hitAge&&hitAge<=s2age+55){
+    document.getElementById('s2retage').textContent='Age '+hitAge;
+    const diff=hitAge-s2ret;
+    if(diff<0)document.getElementById('s2retageSub').textContent=Math.abs(diff)+' years before your target';
+    else if(diff===0)document.getElementById('s2retageSub').textContent='exactly on target';
+    else document.getElementById('s2retageSub').textContent=diff+' years after your target';
+    document.getElementById('s2retage').parentElement.className='met '+(diff<=0?'good':'warn');
+  } else {
+    document.getElementById('s2retage').textContent='Not in range';
+    document.getElementById('s2retageSub').textContent='increase contributions';
+    document.getElementById('s2retage').parentElement.className='met warn';
+  }
+
+  document.getElementById('s2pot').textContent=sgf(s2pot);
+  document.getElementById('s2pots').textContent=s2pot>=s1tgt?'target met':''+sgf(s1tgt-s2pot)+' short of target';
+  document.getElementById('s2inc').textContent=sgf(Math.round(s2minc))+'/mo';
+  document.getElementById('s2incs').textContent='at '+(wdr*100).toFixed(1)+'% withdrawal';
+  document.getElementById('s2real').textContent=sgf(s2rpot);
+  document.getElementById('s2reals').textContent="inflation-adjusted";
+
+  drawChart2(s2age,Math.max(s2ret,hitAge||s2ret+5),s2sav,s2con,mr,infr,s1tgt);
+
+  /* ── Section 3 ── */
+  const gap=s2pot-s1tgt;
+  const onTrack=gap>=0;
+
+  const statusEl=document.getElementById('s3status');
+  statusEl.style.display='flex';
+  if(onTrack){
+    statusEl.className='gap-status ok';
+    statusEl.innerHTML='<i class="ti ti-circle-check" style="font-size:20px"></i> On track — your projected pot of '+sgf(s2pot)+' exceeds your target of '+sgf(s1tgt)+'.';
+  } else {
+    statusEl.className='gap-status behind';
+    statusEl.innerHTML='<i class="ti ti-alert-circle" style="font-size:20px"></i> Gap of '+sgf(Math.abs(gap))+' — your projected pot of '+sgf(s2pot)+' is below your target of '+sgf(s1tgt)+'.';
+  }
+
+  // Extra savings needed
+  const needCon=Math.max(0,conToHit(s2sav,mr,s2yrs*12,s1tgt));
+  const netNeedCon=Math.max(0,needCon-cpfBoost);
+  const currentCon=parseInput(document.getElementById('s2con'))+cpfBoost;
+  const extraNeeded=Math.max(0,needCon-currentCon);
+
+  document.getElementById('s3extra').textContent=onTrack?'S$0':sgf(Math.round(extraNeeded))+'/mo';
+  document.getElementById('s3extras').textContent=onTrack?'You are already on track':'increase from '+sgf(Math.round(currentCon))+'/mo';
+  document.getElementById('s3total').textContent=sgf(Math.round(Math.max(currentCon,needCon)));
+  document.getElementById('s3totals').textContent=cpfBoost?'incl. CPF OA ('+sgf(cpfBoost)+'/mo)':'total monthly needed';
+
+  // Lever 1: retire earlier scenarios
+  const earlyRetires=[s2ret-10,s2ret-5,s2ret];
+  const earlyIds=[['s3e10a','s3e10b'],['s3e5a','s3e5b'],['s3e0a','s3e0b']];
+  const earlyNote=onTrack
+    ?'You are on track at your current savings rate.'
+    :'If you increase savings to '+sgf(Math.round(netNeedCon))+'/mo (your share, excl. CPF), here is when you could retire:';
+  document.getElementById('s3earlytext').textContent=earlyNote;
+
+  earlyRetires.forEach((retireAt,i)=>{
+    const label=i===2?'on target':((s2ret-retireAt)+' years earlier');
+    if(retireAt<=s2age){
+      document.getElementById(earlyIds[i][0]).textContent='—';
+      document.getElementById(earlyIds[i][1]).textContent='already passed';
+      return;
+    }
+    const yrsEarly=Math.max(0,retireAt-s2age);
+    const conForEarly=Math.max(0,conToHit(s2sav,mr,yrsEarly*12,s1tgt));
+    const netForEarly=Math.max(0,conForEarly-cpfBoost);
+    document.getElementById(earlyIds[i][0]).textContent='Age '+retireAt;
+    document.getElementById(earlyIds[i][1]).textContent='save '+sgf(Math.round(netForEarly))+'/mo';
+  });
+
+  // Lever 2: rate scenarios
+  const rates=[3,4,5,6,7,8,9,10];
+  const tbody=document.getElementById('s3rtbody');
+  tbody.innerHTML='';
+  rates.forEach(rPct=>{
+    const rr=rPct/100;
+    const rmr=rr/12;
+    const pot=projPot(s2sav,currentCon,rmr,s2yrs*12);
+    const inc=pot*wdr/12;
+    const extra=Math.max(0,conToHit(s2sav,rmr,s2yrs*12,s1tgt)-currentCon);
+    const mth=monthsToHit(s2sav,currentCon,rmr,s1tgt);
+    const retireAge=mth!=null?Math.round(s2age+mth/12):null;
+    const isCurrent=rPct===Math.round(ar*100);
+    const potClass=pot>=s1tgt?'good':'warn';
+    const extraClass=extra<=0?'good':'warn';
+    const ageClass=retireAge&&retireAge<=s2ret?'good':'warn';
+    const tr=document.createElement('tr');
+    if(isCurrent)tr.className='current-row';
+    tr.innerHTML=`<td>${rPct}%${isCurrent?' <span style="font-size:10px;color:var(--accent)">(current)</span>':''}</td>`+
+      `<td class="${potClass}">${sgf(pot)}</td>`+
+      `<td class="${potClass}">${sgf(Math.round(inc))}/mo</td>`+
+      `<td class="${extraClass}">${extra<=0?'None needed':sgf(Math.round(extra))+'/mo'}</td>`+
+      `<td class="${ageClass}">${retireAge?retireAge:'>'+( s2age+50)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  drawChart3(s2age,s2ret,s2sav,currentCon,mr,infr,s1tgt,needCon);
+
+  // Share summary
+  buildShare([
+    ['sec','Section 1 — target'],
+    ['Desired retirement age',s1ret],['Life expectancy',s1life],
+    ['Monthly income wanted',sgf(s1incToday)+" (today)"],
+    ['CPF LIFE payout',sgf(s1cpfPayout)+'/mo'],
+    ['Portfolio target sum',sgf(s1tgt)],
+    ['sec','Section 2 — current state'],
+    ['Current age',s2age],
+    ['Current savings',sgf(s2sav)],
+    ['Monthly contribution',sgf(parseInput(document.getElementById('s2con')))+(cpfBoost?' + '+sgf(cpfBoost)+' CPF OA':'')],
+    ['Annual return',ar*100+'%'],['Inflation',infr*100+'%'],
+    ['You hit target at age',hitAge?hitAge:'Not within range'],
+    ['Pot at desired retirement age',sgf(s2pot)],['Monthly income at that age',sgf(Math.round(s2minc))+'/mo'],
+    ['sec','Section 3 — the gap'],
+    ['Status',onTrack?'On track':'Behind target'],
+    ['Gap amount',sgf(Math.abs(gap))],
+    ['Extra monthly savings needed',onTrack?'None':sgf(Math.round(extraNeeded))+'/mo'],
+    ['Total monthly savings needed',sgf(Math.round(Math.max(currentCon,needCon)))]
+  ]);
+}
+
+function drawChart2(age,retAge,sav,con,mr,infr,targetLine){
+  const yrs=Math.max(1,retAge-age);
+  const lbls=[],nom=[],real=[],ctb=[];
+  let p=sav,tc=sav;
+  for(let y=0;y<=yrs;y++){
+    lbls.push(age+y);
+    nom.push(Math.round(p));real.push(Math.round(infr>0?p/Math.pow(1+infr,y):p));ctb.push(Math.round(tc));
+    for(let m=0;m<12;m++){p=p*(1+mr)+con;tc+=con;}
+  }
+  const dk=matchMedia('(prefers-color-scheme:dark)').matches;
+  const ac=dk?'#6B7FD7':'#3B4FC0',acl=dk?'rgba(107,127,215,0.12)':'rgba(59,79,192,0.07)';
+  const tl=dk?'#3EBEAB':'#0F6E56',gl=dk?'rgba(180,178,169,0.6)':'rgba(136,135,128,0.6)';
+  const al=dk?'rgba(239,159,39,0.9)':'rgba(186,117,23,0.9)';
+  const tc2=dk?'rgba(255,255,255,0.35)':'rgba(0,0,0,0.33)',gc=dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+  const ds=[
+    {label:'Projected pot',data:nom,borderColor:ac,backgroundColor:acl,fill:true,tension:.4,pointRadius:0,borderWidth:2},
+    {label:'Total contributed',data:ctb,borderColor:gl,backgroundColor:'transparent',fill:false,tension:.4,pointRadius:0,borderWidth:1.5,borderDash:[5,3]},
+  ];
+  if(infr>0)ds.push({label:'Real value',data:real,borderColor:tl,backgroundColor:'transparent',fill:false,tension:.4,pointRadius:0,borderWidth:1.5,borderDash:[2,2]});
+  if(ch2)ch2.destroy();
+  ch2=new Chart(document.getElementById('s2chart'),{type:'line',data:{labels:lbls,datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': S$'+Math.round(c.parsed.y).toLocaleString()}}},scales:{x:{ticks:{color:tc2,font:{size:11},maxTicksLimit:9},grid:{color:gc},border:{display:false}},y:{ticks:{color:tc2,font:{size:11},callback:v=>{if(v>=1e6)return'S$'+(v/1e6).toFixed(1)+'M';if(v>=1e3)return'S$'+(v/1e3).toFixed(0)+'k';return'S$'+v;}},grid:{color:gc},border:{display:false}}}}});
+  if(targetLine){
+    const canvas=document.getElementById('s2chart');
+    setTimeout(()=>{
+      const ctx=canvas.getContext('2d');
+      const ys=ch2&&ch2.scales&&ch2.scales.y;
+      if(ys){const yPx=ys.getPixelForValue(targetLine);if(yPx>0&&yPx<230){ctx.save();ctx.strokeStyle=al;ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(ch2.chartArea.left,yPx);ctx.lineTo(ch2.chartArea.right,yPx);ctx.stroke();ctx.fillStyle=al;ctx.font='11px sans-serif';ctx.fillText('Target',ch2.chartArea.right-44,yPx-5);ctx.restore();}}
+    },50);
+  }
+  document.getElementById('s2leg').innerHTML=ds.map(d=>'<span><span class="legdot" style="background:'+d.borderColor+'"></span>'+d.label+'</span>').join('')+(targetLine?'<span><span class="legtick" style="background:'+al+'"></span>Target</span>':'');
+}
+
+function drawChart3(age,retAge,sav,con,mr,infr,target,needCon){
+  const yrs=Math.max(1,retAge-age);
+  const lbls=[],curr=[],need=[];
+  let pC=sav,pN=sav;
+  const needConSafe=Math.max(0,needCon);
+  for(let y=0;y<=yrs;y++){
+    lbls.push(age+y);
+    curr.push(Math.round(pC));need.push(Math.round(pN));
+    for(let m=0;m<12;m++){pC=pC*(1+mr)+con;pN=pN*(1+mr)+needConSafe;}
+  }
+  const dk=matchMedia('(prefers-color-scheme:dark)').matches;
+  const ac=dk?'#6B7FD7':'#3B4FC0',acl=dk?'rgba(107,127,215,0.1)':'rgba(59,79,192,0.06)';
+  const tl=dk?'#3EBEAB':'#0F6E56',tll=dk?'rgba(62,190,171,0.1)':'rgba(15,110,86,0.07)';
+  const al=dk?'rgba(239,159,39,0.9)':'rgba(186,117,23,0.9)';
+  const tc2=dk?'rgba(255,255,255,0.35)':'rgba(0,0,0,0.33)',gc=dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+  const ds=[
+    {label:'Current trajectory',data:curr,borderColor:ac,backgroundColor:acl,fill:true,tension:.4,pointRadius:0,borderWidth:2},
+    {label:'On-target trajectory',data:need,borderColor:tl,backgroundColor:tll,fill:true,tension:.4,pointRadius:0,borderWidth:2,borderDash:[5,3]},
+  ];
+  if(ch3)ch3.destroy();
+  ch3=new Chart(document.getElementById('s3chart'),{type:'line',data:{labels:lbls,datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': S$'+Math.round(c.parsed.y).toLocaleString()}}},scales:{x:{ticks:{color:tc2,font:{size:11},maxTicksLimit:9},grid:{color:gc},border:{display:false}},y:{ticks:{color:tc2,font:{size:11},callback:v=>{if(v>=1e6)return'S$'+(v/1e6).toFixed(1)+'M';if(v>=1e3)return'S$'+(v/1e3).toFixed(0)+'k';return'S$'+v;}},grid:{color:gc},border:{display:false}}}}});
+  if(target){
+    const canvas=document.getElementById('s3chart');
+    setTimeout(()=>{
+      const ctx=canvas.getContext('2d');
+      const ys=ch3&&ch3.scales&&ch3.scales.y;
+      if(ys){const yPx=ys.getPixelForValue(target);if(yPx>0&&yPx<230){ctx.save();ctx.strokeStyle=al;ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(ch3.chartArea.left,yPx);ctx.lineTo(ch3.chartArea.right,yPx);ctx.stroke();ctx.fillStyle=al;ctx.font='11px sans-serif';ctx.fillText('Target',ch3.chartArea.right-44,yPx-5);ctx.restore();}}
+    },50);
+  }
+  document.getElementById('s3leg').innerHTML=ds.map(d=>'<span><span class="legdot" style="background:'+d.borderColor+'"></span>'+d.label+'</span>').join('')+(target?'<span><span class="legtick" style="background:'+al+'"></span>Target</span>':'');
+}
+
+function buildShare(rows){
+  lastSummary=rows;
+  document.getElementById('sharetable').innerHTML=rows.map(r=>{
+    if(r[0]==='sec')return'<tr class="sh"><td colspan="2">'+r[1]+'</td></tr>';
+    return'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>';
+  }).join('');
+}
+function copySummary(){
+  const text=lastSummary.filter(r=>r[0]!=='sec').map(r=>r[0]+': '+r[1]).join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    document.getElementById('copylbl').textContent='Copied!';
+    setTimeout(()=>document.getElementById('copylbl').textContent='Copy summary',2000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    document.getElementById('copylbl').textContent='Copied!';
+    setTimeout(()=>document.getElementById('copylbl').textContent='Copy summary',2000);
+  });
+}
+
+['s1inc','s1cpf','s2sav','s2con'].forEach(attachFmt);
+(function(){
+  const el=document.getElementById('salary');
+  if(!el)return;
+  el.addEventListener('focus',function(){this.value=this.value.replace(/,/g,'');});
+  el.addEventListener('blur',function(){
+    const n=parseFloat(this.value.replace(/,/g,''));
+    if(!isNaN(n))this.value=Math.round(n).toLocaleString();
+    calcCPF();
+  });
+  el.addEventListener('input',function(){calcCPF();});
+  const n=parseFloat((el.value||'').replace(/,/g,''));
+  if(!isNaN(n)&&n>0)el.value=Math.round(n).toLocaleString();
+})();
+go();
+</script>
+</body>
+</html>
